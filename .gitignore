@@ -1,0 +1,4 @@
+# .gitignore
+.venv/
+dist/
+labyrinth_game/__pycache__
