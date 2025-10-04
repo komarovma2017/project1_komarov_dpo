@@ -1,23 +1,29 @@
-
-from constants import ROOMS
-from player_actions import (
+from .constants import COMMANDS, ROOMS
+from .player_actions import (
     get_input,
     move_player,
     show_inventory,
     take_item,
     use_item,
 )
-from utils import (
+
+from .utils import (
     attempt_open_treasure,
     describe_current_room,
+    show_help,
     solve_puzzle,
 )
 
 
 def process_command(game_state, command_line):
     parts = command_line.strip().split(maxsplit=1)
-    command = parts[0].lower() if parts else ''
+    command = parts.lower() if parts else ''
     argument = parts[1].lower() if len(parts) > 1 else ''
+    move_commands = {'north', 'south', 'east', 'west'}
+
+    if command in move_commands:
+        move_player(game_state, command)
+        return
 
     match command:
         case 'look':
@@ -58,12 +64,10 @@ def process_command(game_state, command_line):
             print("Выход из игры. До свидания!")
             game_state['game_over'] = True
         case 'help':
-            from utils import show_help
-            show_help()
+            show_help(COMMANDS)
         case _:
             print("Неизвестная команда. Введите 'help' для списка команд.")
 
-йгше
 def main():
     game_state = {
         'player_inventory': [],
@@ -78,7 +82,6 @@ def main():
     while not game_state['game_over']:
         command_line = get_input()
         process_command(game_state, command_line)
-
 
 if __name__ == '__main__':
     main()

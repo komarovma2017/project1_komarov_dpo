@@ -1,6 +1,46 @@
+import math
 
-from constants import ROOMS
+from .constants import COMMANDS, ROOMS
 
+
+def pseudo_random(seed, modulo):
+    x = math.sin(seed * 12.9898) * 43758.5453
+    fract = x - math.floor(x)
+    return int(fract * modulo)
+
+def trigger_trap(game_state):
+    print("Ловушка активирована! Пол стал дрожать...")
+    inventory = game_state['player_inventory']
+    if inventory:
+        idx = pseudo_random(game_state['steps_taken'], len(inventory))
+        lost = inventory.pop(idx)
+        print(f"Вы потеряли предмет: {lost}!")
+    else:
+        dmg = pseudo_random(game_state['steps_taken'], 10)
+        if dmg < 3:
+            print("Вы не выдержали ловушку и погибаете...")
+            game_state['game_over'] = True
+        else:
+            print("Вам повезло, вы пережили ловушку!")
+
+def random_event(game_state):
+    if pseudo_random(game_state['steps_taken'], 10) == 0:
+        event = pseudo_random(game_state['steps_taken'] + 1, 3)
+        room = ROOMS[game_state['current_room']]
+        if event == 0:
+            print("Вы находите на полу монетку!")
+            room['items'].append('coin')
+        elif event == 1:
+            print("Вы слышите мистический шорох в темноте.")
+            if 'sword' in game_state['player_inventory']:
+                print("Вы нервно сжимаете меч. Существо в панике убегает.")
+        elif (
+            event == 2
+            and game_state['current_room'] == 'trap_room'
+            and 'torch' not in game_state['player_inventory']
+        ):
+            print("Вы вдруг чувствуете опасность в темной комнате!")
+            trigger_trap(game_state)
 
 def describe_current_room(game_state):
     current_room = game_state['current_room']
@@ -15,6 +55,10 @@ def describe_current_room(game_state):
     if room['puzzle'] is not None:
         print("Кажется, здесь есть загадка (используйте команду solve).")
 
+def show_help(command_dict=COMMANDS):
+    print("Команды игры:")
+    for cmd, desc in command_dict.items():
+        print(f"{cmd.ljust(16)} — {desc}")
 
 def solve_puzzle(game_state):
     current_room = game_state['current_room']
@@ -25,26 +69,23 @@ def solve_puzzle(game_state):
     question, answer = room['puzzle']
     print(question)
     user_answer = input("Ваш ответ: ").strip().lower()
-    if user_answer == answer.lower():
+    alternatives = { '10': ['десять'], 'резонанс': [] }
+    valid = [answer.lower()]
+    if answer.lower() in alternatives:
+        valid += alternatives[answer.lower()]
+    if user_answer in valid:
         print("Правильно! Загадка решена.")
         room['puzzle'] = None
         if current_room == 'library':
-            game_state['player_inventory'].append('magic key')
-            print("Вы получили магический ключ!")
+            game_state['player_inventory'].append('rusty key')
+            print("Вы получили ржавый ключ!")
+        elif current_room == 'hall':
+            game_state['player_inventory'].append('treasure_key')
+            print("Вы получили ключ от сокровищницы!")
+    elif current_room == 'trap_room':
+        trigger_trap(game_state)
     else:
         print("Неверно. Попробуйте снова.")
-
-
-def show_help():
-    print("Команды игры:")
-    print("  go [направление] - переместиться")
-    print("  look - осмотреться")
-    print("  take [предмет] - взять предмет")
-    print("  use [предмет] - использовать предмет")
-    print("  inventory - показать инвентарь")
-    print("  solve - решить загадку")
-    print("  quit - выйти из игры")
-
 
 def attempt_open_treasure(game_state):
     current_room = game_state['current_room']
@@ -69,7 +110,7 @@ def attempt_open_treasure(game_state):
             correct_code = None
             if room['puzzle'] is not None:
                 _, correct_code = room['puzzle']
-            if code_input == correct_code:
+            if code_input == correct_code or code_input == 'десять':
                 print("Код верный. Сундук открыт!")
                 room['items'].remove('treasure chest')
                 print("В сундуке сокровище! Вы победили!")
@@ -78,4 +119,3 @@ def attempt_open_treasure(game_state):
                 print("Неверный код.")
         else:
             print("Вы отступаете от сундука.")
-
