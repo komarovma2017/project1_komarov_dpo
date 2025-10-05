@@ -4,11 +4,18 @@ from .constants import COMMANDS, ROOMS
 
 
 def pseudo_random(seed, modulo):
+    """
+    Возвращает псевдослучайное целое в диапазоне [0, modulo) 
+    на основе математической формулы с синусом.
+    """
     x = math.sin(seed * 12.9898) * 43758.5453
     fract = x - math.floor(x)
     return int(fract * modulo)
 
 def trigger_trap(game_state):
+    """
+    Активирует ловушку: теряется случайный предмет или с шансом закончится игра.
+    """
     print("Ловушка активирована! Пол стал дрожать...")
     inventory = game_state['player_inventory']
     if inventory:
@@ -24,6 +31,10 @@ def trigger_trap(game_state):
             print("Вам повезло, вы пережили ловушку!")
 
 def random_event(game_state):
+    """
+    Выполняет небольшое случайное событие после перемещения игрока:
+    находка, испуг, ловушка (в trap_room без факела).
+    """
     if pseudo_random(game_state['steps_taken'], 10) == 0:
         event = pseudo_random(game_state['steps_taken'] + 1, 3)
         room = ROOMS[game_state['current_room']]
@@ -43,6 +54,9 @@ def random_event(game_state):
             trigger_trap(game_state)
 
 def describe_current_room(game_state):
+    """
+    Выводит описание текущей комнаты, список предметов и возможные выходы.
+    """
     current_room = game_state['current_room']
     room = ROOMS[current_room]
     print(f"== {current_room.upper()} ==")
@@ -56,11 +70,18 @@ def describe_current_room(game_state):
         print("Кажется, здесь есть загадка (используйте команду solve).")
 
 def show_help(command_dict=COMMANDS):
+    """
+    Выводит справку по возможным командам игры с коротким описанием для каждой.
+    """
     print("Команды игры:")
     for cmd, desc in command_dict.items():
         print(f"{cmd.ljust(16)} — {desc}")
 
 def solve_puzzle(game_state):
+    """
+    Позволяет решить загадку в текущей комнате; награда зависит от комнаты.
+    Некоторые загадки допускают альтернативные верные варианты ответа.
+    """
     current_room = game_state['current_room']
     room = ROOMS[current_room]
     if room['puzzle'] is None:
@@ -88,6 +109,10 @@ def solve_puzzle(game_state):
         print("Неверно. Попробуйте снова.")
 
 def attempt_open_treasure(game_state):
+    """
+    Реализует попытку открыть сундук в комнате сокровищ.
+    Учитывает наличие ключей и возможность ввода кода.
+    """
     current_room = game_state['current_room']
     room = ROOMS[current_room]
     if 'treasure chest' not in room['items']:

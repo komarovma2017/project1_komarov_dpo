@@ -6,7 +6,6 @@ from .player_actions import (
     take_item,
     use_item,
 )
-
 from .utils import (
     attempt_open_treasure,
     describe_current_room,
@@ -16,8 +15,12 @@ from .utils import (
 
 
 def process_command(game_state, command_line):
+    """
+    Обрабатывает пользовательскую команду и вызывает соответствующую функцию.
+    Поддерживает короткие команды движения и команды с аргументами.
+    """
     parts = command_line.strip().split(maxsplit=1)
-    command = parts.lower() if parts else ''
+    command = parts[0].lower() if parts else ''
     argument = parts[1].lower() if len(parts) > 1 else ''
     move_commands = {'north', 'south', 'east', 'west'}
 
@@ -69,6 +72,9 @@ def process_command(game_state, command_line):
             print("Неизвестная команда. Введите 'help' для списка команд.")
 
 def main():
+    """
+    Точка входа в игру. Управляет основным игровым циклом.
+    """
     game_state = {
         'player_inventory': [],
         'current_room': 'entrance',

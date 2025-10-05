@@ -3,6 +3,7 @@ from .utils import describe_current_room, random_event
 
 
 def show_inventory(game_state):
+    """Показывает содержимое инвентаря игрока."""
     inventory = game_state['player_inventory']
     if inventory:
         print("В вашем инвентаре:", ', '.join(inventory))
@@ -10,6 +11,8 @@ def show_inventory(game_state):
         print("Инвентарь пуст.")
 
 def get_input(prompt="> "):
+    """Получает ввод пользователя, безопасно завершает игру /
+    при EOF/KeyboardInterrupt."""
     try:
         return input(prompt)
     except (KeyboardInterrupt, EOFError):
@@ -17,6 +20,11 @@ def get_input(prompt="> "):
         return "quit"
 
 def move_player(game_state, direction):
+    """
+    Перемещает игрока в указанном направлении, 
+    если выход существует и соответствует условиям (например, необходим ключ).
+    Также после перемещения может сработать случайное событие.
+    """
     current_room = game_state['current_room']
     room = ROOMS[current_room]
     exits = room['exits']
@@ -41,6 +49,7 @@ def move_player(game_state, direction):
         print("Нельзя пойти в этом направлении.")
 
 def take_item(game_state, item_name):
+    """Добавляет предмет из текущей комнаты в инвентарь игрока, если предмет есть."""
     current_room = game_state['current_room']
     room = ROOMS[current_room]
     if item_name in room['items']:
@@ -51,6 +60,10 @@ def take_item(game_state, item_name):
         print("Такого предмета здесь нет.")
 
 def use_item(game_state, item_name):
+    """
+    Использует предмет из инвентаря игрока,
+    реализует специальные эффекты для отдельных предметов.
+    """
     if item_name not in game_state['player_inventory']:
         print("У вас нет такого предмета.")
         return
